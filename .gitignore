@@ -7,3 +7,4 @@ scratch.py
 ignore/
 .mypy_cache/
 reports/
+.DS_Store
