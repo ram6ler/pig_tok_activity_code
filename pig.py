@@ -116,6 +116,9 @@ def play_game(show_play, player_names, decide_functions):
         if subscore == 1:
             if show_play:
                 print("      Unlucky!\n")
+        elif scores[who_to_play] + subscore >= 100:
+            # Take the loot if it means a win.
+            break
         else:
             while decide_functions[who_to_play](scores[who_to_play], subscore, scores[other_player_index]):
                 die_result = throw_die()
@@ -132,7 +135,8 @@ def play_game(show_play, player_names, decide_functions):
                     subscore += die_result
                     if show_play:
                         print("      Loot is now {}.".format(subscore))
-
+                    
+                    # Take the loot if it means a win.
                     if scores[who_to_play] + subscore >= 100:
                         break
             
@@ -200,29 +204,7 @@ def compete(player_names, decide_functions):
     
     return wins[0] - wins[1], p
 
-# Example players
 
-def random_decide(my_score, loot, your_score):
-    """A pig who tosses a coin to decide..."""
-
-    return random.randint(0, 1) == 1
-
-
-def simple_decide(my_score, loot, your_score):
-    """A moderately greedy pig..."""
-    if loot < 15:
-        return True
-    return False
-
-def scared_decide(my_score, loot, your_score):
-    """A pig who get's scared if the other player is too close..."""
-    if my_score + loot - your_score < 15:
-        return True
-    return False
-
-
-# Pit two platers against each other.
-# compete(["Random", "Simple"], [random_decide, simple_decide])
 
 def arena(player_names, decide_functions):
     """
@@ -244,6 +226,25 @@ def arena(player_names, decide_functions):
     font-size: 18pt;
     position: relative;
     top: 3pt;
+  }
+
+  .significant {
+    font-weight: bold;
+  }
+  .win {
+    color: darkgreen;
+    background: lightgreen;
+  }
+  .loss {
+    color: darkred;
+    background: pink;
+  }
+  .not-significant {
+    color: gray;
+    background: white;
+  }
+  td {
+    padding: 3pt;
   }
 </style>
 
@@ -281,14 +282,25 @@ def arena(player_names, decide_functions):
         decisions =  list(map(lambda index: decide_functions[index], combo))
         print("\n<div id='{}'></div>\n".format(linkify(player1, player2)))
         d, p = compete(players, decisions)
-        if p <= 0.05:
+        print("\n\n[Back to top.](#top)\n")
+        significant = p <= 0.05
+        if significant:
             if d > 0:
                 significant_wins[player1] += 1
             else:
                 significant_wins[player2] += 1
-
-        record[player1][player2] = "{}{} ({})".format("+" if d > 0 else "", d, p)
-        record[player2][player1] = "{}{} ({})".format("+" if d < 0 else "",-d, p)
+        div_start_1 = "<div class='{} {}'>".format(
+            "win" if d > 0 else "loss",
+            "significant" if significant else "not-significant"
+        )
+        div_start_2 = "<div class='{} {}'>".format(
+            "loss" if d > 0 else "win",
+            "significant" if significant else "not-significant"
+        )
+        record[player1][player2] = "{}{}{} ({})</div>".format(
+            div_start_1, "+" if d > 0 else "", d, p)
+        record[player2][player1] = "{}{}{} ({})</div>".format(
+            div_start_2, "+" if d < 0 else "",-d, p)
 
     print("\n\n<div id='summary'></div>\n\n## Arena Results Summary\n")
 
@@ -301,10 +313,36 @@ def arena(player_names, decide_functions):
             significant_wins[player_name_row]))
 
     print("\n[Back to top.](#top)")
-              
-        
-# Example
+
+# Example functions.
+def random_decide(my_score, loot, your_score):
+    """A pig who tosses a coin to decide..."""
+    return random.randint(0, 1) == 1
+
+def simple_decide(my_score, loot, your_score):
+    """A moderately greedy pig..."""
+    if loot < 15:
+        return True
+    return False
+
+def scared_decide(my_score, loot, your_score):
+    """A pig who get's scared if the other player is too close..."""
+    if my_score + loot - your_score < 15:
+        return True
+    return False
+
+def good_decide(my_score, loot, your_score):
+    """A pig who plays pretty well..."""
+    if your_score > 75:
+        return True
+    if loot < 20:
+        return True
+    return False
+
+# Add student functions here. #####################################
+
+# Send functions into the arena to fight it out. #################
 arena(
-    ["Random-Pig-1", "Random-Pig-2", "Simple-Pig", "Scared-Pig"], 
-    [random_decide, random_decide, simple_decide, scared_decide])
+    ["Random-Pig", "Simple-Pig", "Scared-Pig", "Good-Pig"], 
+    [random_decide, simple_decide, scared_decide, good_decide])
 

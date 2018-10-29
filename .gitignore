@@ -4,3 +4,6 @@ pig.Rproj
 script.R
 .vscode
 scratch.py
+ignore/
+.mypy_cache/
+reports/
